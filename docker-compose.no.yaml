@@ -1,0 +1,34 @@
+services:
+  kong:
+    image: kong:latest
+    volumes:
+      - "./config:/usr/local/kong/declarative"
+      - "./logs/file.log:/file.log"
+    restart: on-failure
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_LOG_LEVEL: debug
+      KONG_PLUGINS: bundled
+    ports:
+      - "8000:8000/tcp"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+    command: ["kong", "start"]
+    # command: ["/bin/sh", "-c", "kong start && ./init_kong.sh"]
+  
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - kong
+
+  redis:
+    image: "redis:alpine"

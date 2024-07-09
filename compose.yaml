@@ -1,0 +1,71 @@
+services:
+  kong-database:
+    image: postgres:17beta2-bullseye
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+    ports:
+      - "9432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  kong-migration:
+    image: kong:latest
+    restart: on-failure
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PASSWORD: kong
+    depends_on:
+      - kong-database
+    command: ["kong", "migrations", "bootstrap"]
+
+
+  kong:
+    image: kong:latest
+    volumes:
+      - "./config:/usr/local/kong/declarative"
+    restart: on-failure
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PASSWORD: kong
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_LOG_LEVEL: debug
+      KONG_PLUGINS: bundled
+    ports:
+      - "8000:8000/tcp"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+    depends_on:
+      - kong-migration
+      - kong-database
+    command: ["kong", "start"]
+  
+  kong-deck:
+    image: kong/deck:latest
+    depends_on:
+      - kong
+    volumes:
+      - ./config/kong.yaml:/kong.yaml
+    entrypoint: ["deck", "sync", "--state", "/kong.yaml"]
+    
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - kong
+
+  redis:
+    image: "redis:alpine"
+
+volumes:
+  postgres_data:
