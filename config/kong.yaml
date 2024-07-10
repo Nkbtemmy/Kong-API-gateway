@@ -17,33 +17,33 @@ services:
 #       weight: 50
 
 
-plugins:
-- name: file-log
-  config:
-    path: /file.log
-    reopen: false
+# plugins:
+# - name: file-log
+#   config:
+#     path: /file.log
+#     reopen: false
     
-- name: cors
-  config:
-    origins:
-    - "*"
-    methods:
-    - GET
-    - POST
-    headers:
-    - Accept
-    - Accept-Version
-    - Content-Length
-    - Content-MD5
-    - Content-Type
-    - Date
-    - X-Auth-Token
-    - Authorization
-    exposed_headers:
-    - X-Auth-Token
-    credentials: true
-    max_age: 3600
-    preflight_continue: false
+# - name: cors
+#   config:
+#     origins:
+#     - "*"
+#     methods:
+#     - GET
+#     - POST
+#     headers:
+#     - Accept
+#     - Accept-Version
+#     - Content-Length
+#     - Content-MD5
+#     - Content-Type
+#     - Date
+#     - X-Auth-Token
+#     - Authorization
+#     exposed_headers:
+#     - X-Auth-Token
+#     credentials: true
+#     max_age: 3600
+#     preflight_continue: false
 
 # - name: rate-limiting
 #   config:

@@ -11,4 +11,4 @@ done
 curl -i -X POST --url http://kong:8001/services/ --data 'name=web-service' --data 'url=http://web:5000'
 
 # Add a route for the service
-curl -i -X POST --url http://kong:8001/services/web-service/routes --data 'hosts[]=localhost'
+curl -i -X POST --url http://kong:8001/services/web-service/routes --data 'paths[]=/web-service'

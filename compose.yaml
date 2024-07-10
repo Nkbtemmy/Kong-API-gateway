@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   kong-database:
     image: postgres:17beta2-bullseye
@@ -9,6 +11,8 @@ services:
       - "9432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kong-network
 
   kong-migration:
     image: kong:latest
@@ -20,7 +24,8 @@ services:
     depends_on:
       - kong-database
     command: ["kong", "migrations", "bootstrap"]
-
+    networks:
+      - kong-network
 
   kong:
     image: kong:latest
@@ -48,6 +53,8 @@ services:
       - kong-migration
       - kong-database
     command: ["kong", "start"]
+    networks:
+      - kong-network
   
   kong-deck:
     image: kong/deck:latest
@@ -56,16 +63,36 @@ services:
     volumes:
       - ./config/kong.yaml:/kong.yaml
     entrypoint: ["deck", "sync", "--state", "/kong.yaml"]
-    
+    networks:
+      - kong-network
+  
+  curl:
+    image: curlimages/curl
+    depends_on:
+      - kong
+    volumes:
+      - ./setup_kong.sh:/setup_kong.sh
+    entrypoint: ["sh", "/setup_kong.sh"]
+    networks:
+      - kong-network
+
   web:
     build: .
     ports:
       - "5000:5000"
     depends_on:
       - kong
+    networks:
+      - kong-network
 
   redis:
     image: "redis:alpine"
+    networks:
+      - kong-network
 
 volumes:
   postgres_data:
+
+networks:
+  kong-network:
+    driver: bridge
